@@ -135,12 +135,34 @@ def github_import(payload: dict, background_tasks: BackgroundTasks):
         
         owner, repo = path_parts[0], path_parts[1]
         
-        # Download ZIP using redirect API
-        download_url = f"https://api.github.com/repos/{owner}/{repo}/zipball"
-        headers = {"User-Agent": "DevRAG-Code-Companion"}
-        response = requests.get(download_url, headers=headers, timeout=60)
-        if response.status_code != 200:
-            raise Exception(f"Failed to download repository: HTTP {response.status_code}")
+        # Download ZIP using direct web links to avoid GitHub API rate limits (HTTP 403)
+        response = None
+        for branch in ["main", "master"]:
+            download_url = f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
+            headers = {"User-Agent": "DevRAG-Code-Companion"}
+            try:
+                r = requests.get(download_url, headers=headers, timeout=60)
+                if r.status_code == 200:
+                    response = r
+                    break
+            except Exception:
+                pass
+                
+        # Try legacy zipball endpoint if archive refs fail
+        if response is None:
+            for branch in ["main", "master"]:
+                download_url = f"https://github.com/{owner}/{repo}/zipball/{branch}"
+                headers = {"User-Agent": "DevRAG-Code-Companion"}
+                try:
+                    r = requests.get(download_url, headers=headers, timeout=60)
+                    if r.status_code == 200:
+                        response = r
+                        break
+                except Exception:
+                    pass
+
+        if response is None or response.status_code != 200:
+            raise Exception(f"Failed to download repository from GitHub. Checked main/master branches.")
         
         # Extract to target workspace directory
         target_dir = os.path.join(os.path.dirname(__file__), "github_repos", f"{owner}_{repo}")

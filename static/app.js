@@ -102,6 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial state setup
     btnSend.disabled = true;
 
+    // If running in production (cloud), hide local folder scan tab and show GitHub tab by default
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+        if (tabLocal) tabLocal.style.display = 'none';
+        if (tabGithub) {
+            tabGithub.click();
+            const scanTabs = document.querySelector('.scan-tabs');
+            if (scanTabs) scanTabs.style.display = 'none';
+        }
+    }
+
     // Functions
 
     async function fetchDefaultPath() {
