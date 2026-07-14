@@ -20,15 +20,11 @@ DevRAG Code Companion is a premium, full-stack, RAG-powered coding assistant tha
 
 ---
 
-## 🎬 Live Demo & Video Walkthrough
+## 📸 Application Screenshots
+<img width="1917" height="867" alt="Screenshot 2026-07-14 152208" src="https://github.com/user-attachments/assets/0af74589-2cf0-450d-bde6-5593695984c5" />
+<img width="1917" height="867" alt="Screenshot 2026-07-14 151127" src="https://github.com/user-attachments/assets/aaecc9a7-dfad-410f-ac36-4146cb662c4b" />
 
-> [!TIP]
-> *Replace the placeholder below with your own demo video or GIF to show the app in action!*
 
-<p align="center">
-  <!-- Add your video or GIF link inside the src attribute below -->
-  <img src="https://via.placeholder.com/800x450.png?text=Demo+Video+Placeholder" width="100%" alt="DevRAG Code Companion Demo" />
-</p>
 
 ---
 
