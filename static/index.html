@@ -104,9 +104,6 @@
                     <p id="chat-focus-indicator">Searching all indexed code files</p>
                 </div>
                 <div class="chat-actions" style="display: flex; gap: 10px;">
-                    <button id="btn-how-to-use" class="btn-secondary" title="How to use the chatbot">
-                        <i class="fa-regular fa-circle-question"></i> How to Use
-                    </button>
                     <button id="btn-clear" class="btn-secondary" title="Clear chat history">
                         <i class="fa-solid fa-trash-can"></i> Clear Chat
                     </button>
@@ -135,22 +132,6 @@
                 </div>
             </footer>
         </main>
-    </div>
-
-    <!-- How to Use Modal -->
-    <div id="instructions-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-modal">&times;</span>
-            <h3>How to Use Code Companion 🚀</h3>
-            <p>I am a RAG-powered developer assistant running locally on your machine. I can read your source code files (Python, C, C++, Java, JS/TS, HTML, CSS, Markdown, etc.) and answer your questions directly.</p>
-            <p><strong>To get started:</strong></p>
-            <ol style="margin-left: 20px; margin-top: 10px; margin-bottom: 10px;">
-                <li style="margin-bottom: 6px;">Enter your project's absolute folder path in the sidebar.</li>
-                <li style="margin-bottom: 6px;">Click <strong>Index</strong> to scan and vector-embed your code.</li>
-                <li style="margin-bottom: 6px;">Select or filter files in the browser sidebar to narrow down my focus.</li>
-                <li style="margin-bottom: 6px;">Ask me questions like <em>"Explain the logic in XYZ function"</em>, <em>"How does the database connection work?"</em>, or <em>"Explain this project's README"</em>.</li>
-            </ol>
-        </div>
     </div>
 </body>
 </html>
