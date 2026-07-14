@@ -280,7 +280,12 @@ async def chat_stream(request: ChatRequest):
         try:
             response = requests.post(url, json=payload, stream=True, timeout=60)
             if response.status_code != 200:
-                yield f"data: {json.dumps({'error': f'Gemini returned status {response.status_code}'})}\n\n"
+                try:
+                    err_json = response.json()
+                    err_msg = err_json.get("error", {}).get("message", response.text)
+                except Exception:
+                    err_msg = response.text
+                yield f"data: {json.dumps({'error': f'Gemini returned status {response.status_code}: {err_msg}'})}\n\n"
                 return
                 
             for line in response.iter_lines():
