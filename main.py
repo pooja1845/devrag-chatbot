@@ -285,6 +285,7 @@ async def chat_stream(request: ChatRequest):
                 "parts": [{"text": system_instruction_text}]
             }
             
+        last_error = "No active connection"
         for model in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={api_key}"
             try:
@@ -294,12 +295,22 @@ async def chat_stream(request: ChatRequest):
                     selected_model = model
                     break
                 else:
-                    print(f"Model {model} returned status {r.status_code}")
+                    try:
+                        err_json = r.json()
+                        err_msg = err_json.get("error", {}).get("message", r.text)
+                    except Exception:
+                        err_msg = r.text
+                    last_error = f"HTTP {r.status_code}: {err_msg}"
+                    print(f"Model {model} returned status {r.status_code}: {err_msg}")
             except Exception as e:
+                last_error = str(e)
                 print(f"Failed to connect to model {model}: {e}")
                 
         if response is None:
-            yield f"data: {json.dumps({'error': 'Gemini API models not found or not supported. Tested: gemini-2.5-flash, gemini-1.5-flash, gemini-3.5-flash.'})}\n\n"
+            if "429" in last_error:
+                yield f"data: {json.dumps({'error': 'Gemini API rate limit exceeded (HTTP 429). Please wait a few seconds and try again.'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'error': f'Gemini API error: {last_error}'})}\n\n"
             return
                 
         try:
