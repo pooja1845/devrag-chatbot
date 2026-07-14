@@ -248,7 +248,15 @@ async def chat_stream(request: ChatRequest):
     # 4. Stream response from local Ollama or Gemini API
     def generate_gemini_stream():
         api_key = os.environ.get("GEMINI_API_KEY")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key={api_key}"
+        models_to_try = [
+            "gemini-2.5-flash",
+            "gemini-1.5-flash",
+            "gemini-3.5-flash",
+            "gemini-1.5-flash-latest"
+        ]
+        
+        response = None
+        selected_model = None
         
         contents = []
         system_instruction_text = ""
@@ -277,17 +285,24 @@ async def chat_stream(request: ChatRequest):
                 "parts": [{"text": system_instruction_text}]
             }
             
-        try:
-            response = requests.post(url, json=payload, stream=True, timeout=60)
-            if response.status_code != 200:
-                try:
-                    err_json = response.json()
-                    err_msg = err_json.get("error", {}).get("message", response.text)
-                except Exception:
-                    err_msg = response.text
-                yield f"data: {json.dumps({'error': f'Gemini returned status {response.status_code}: {err_msg}'})}\n\n"
-                return
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?key={api_key}"
+            try:
+                r = requests.post(url, json=payload, stream=True, timeout=60)
+                if r.status_code == 200:
+                    response = r
+                    selected_model = model
+                    break
+                else:
+                    print(f"Model {model} returned status {r.status_code}")
+            except Exception as e:
+                print(f"Failed to connect to model {model}: {e}")
                 
+        if response is None:
+            yield f"data: {json.dumps({'error': 'Gemini API models not found or not supported. Tested: gemini-2.5-flash, gemini-1.5-flash, gemini-3.5-flash.'})}\n\n"
+            return
+                
+        try:
             for line in response.iter_lines():
                 if line:
                     decoded = line.decode('utf-8').strip()
@@ -304,7 +319,7 @@ async def chat_stream(request: ChatRequest):
                         data = json.loads(decoded)
                         text_chunk = data["candidates"][0]["content"]["parts"][0]["text"]
                         yield f"data: {json.dumps({'content': text_chunk})}\n\n"
-                    except Exception as e:
+                    except Exception:
                         pass
         except Exception as e:
             yield f"data: {json.dumps({'error': f'Failed to contact Gemini: {str(e)}'})}\n\n"
