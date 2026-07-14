@@ -286,7 +286,7 @@ async def chat_stream(request: ChatRequest):
             }
             
         for model in models_to_try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={api_key}"
             try:
                 r = requests.post(url, json=payload, stream=True, timeout=60)
                 if r.status_code == 200:
@@ -306,6 +306,8 @@ async def chat_stream(request: ChatRequest):
             for line in response.iter_lines():
                 if line:
                     decoded = line.decode('utf-8').strip()
+                    if decoded.startswith("data:"):
+                        decoded = decoded[len("data:"):].strip()
                     if decoded.startswith("["):
                         decoded = decoded[1:]
                     if decoded.startswith(","):
