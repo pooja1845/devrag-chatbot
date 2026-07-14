@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Code Companion - RAG Chatbot</title>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <script src="/static/app.js?v=2" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-microchip-ascii logo-icon"></i>
+                    <span>Code Companion</span>
+                </div>
+            </div>
+
+            <!-- Workspace Scanning -->
+            <div class="sidebar-section">
+                <div class="scan-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; background: #0c0c0e; border: 1px solid var(--border-color); border-radius: 6px; padding: 3px;">
+                    <button id="tab-local" class="tab-btn active" style="flex: 1; background: var(--btn-primary-bg); border: none; border-radius: 4px; padding: 6px 10px; font-size: 0.75rem; color: #fff; cursor: pointer; font-weight: 500; transition: all 0.2s ease;">Local Folder</button>
+                    <button id="tab-github" class="tab-btn" style="flex: 1; background: transparent; border: none; border-radius: 4px; padding: 6px 10px; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; font-weight: 500; transition: all 0.2s ease;">GitHub Repo</button>
+                </div>
+                
+                <!-- Local Directory Input -->
+                <div id="container-local" class="input-panel">
+                    <h3 class="section-title"><i class="fa-solid fa-folder-open"></i> Workspace Path</h3>
+                    <div class="path-input-group">
+                        <input type="text" id="workspace-path" placeholder="C:\path\to\your\project" spellcheck="false">
+                        <button id="btn-scan" title="Scan and index workspace">
+                            <i class="fa-solid fa-rotate"></i> Index
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- GitHub Import Input -->
+                <div id="container-github" class="input-panel" style="display: none;">
+                    <h3 class="section-title"><i class="fa-brands fa-github"></i> GitHub URL</h3>
+                    <div class="path-input-group">
+                        <input type="text" id="github-url" placeholder="https://github.com/user/repo" spellcheck="false">
+                        <button id="btn-github-import" title="Download and index repo">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Import
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Status Display -->
+                <div id="index-status-container" class="status-container">
+                    <div class="status-indicator-row">
+                        <span class="status-dot idle" id="status-dot"></span>
+                        <span id="status-text" class="status-text">Idle</span>
+                    </div>
+                    <div class="progress-bar-container" id="progress-bar-container" style="display: none;">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div id="status-message" class="status-message"></div>
+                </div>
+            </div>
+
+            <!-- File List Selector -->
+            <div class="sidebar-section files-section">
+                <div class="files-header">
+                    <h3 class="section-title"><i class="fa-solid fa-network-wired"></i> Code Files</h3>
+                    <span id="files-count" class="badge">0</span>
+                </div>
+                
+                <div class="files-filter-group">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="file-search" placeholder="Filter files...">
+                    </div>
+                    <div class="selection-controls">
+                        <button id="btn-select-all" class="mini-btn">All</button>
+                        <button id="btn-deselect-all" class="mini-btn">None</button>
+                    </div>
+                </div>
+
+                <div class="files-tree" id="files-tree">
+                    <div class="empty-files-message">No files indexed yet. Enter a workspace path and click "Index" to start!</div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="model-badge">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Model: Qwen2.5-Coder 1.5B</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-container">
+            <!-- Top bar -->
+            <header class="chat-header">
+                <div class="chat-info">
+                    <h2>Workspace Assistant</h2>
+                    <p id="chat-focus-indicator">Searching all indexed code files</p>
+                </div>
+                <div class="chat-actions" style="display: flex; gap: 10px;">
+                    <button id="btn-how-to-use" class="btn-secondary" title="How to use the chatbot">
+                        <i class="fa-regular fa-circle-question"></i> How to Use
+                    </button>
+                    <button id="btn-clear" class="btn-secondary" title="Clear chat history">
+                        <i class="fa-solid fa-trash-can"></i> Clear Chat
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Messages -->
+            <section class="chat-messages" id="chat-messages">
+                <!-- Welcome Screen -->
+                <div id="welcome-container" class="welcome-container">
+                    <div class="welcome-logo">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <h1>Welcome to Code Companion</h1>
+                    <p>Ask a question to start understanding your codebase</p>
+                </div>
+            </section>
+
+            <!-- Chat Input Area -->
+            <footer class="chat-input-area">
+                <div class="input-container">
+                    <textarea id="chat-input" placeholder="Ask a question about your code..." rows="1"></textarea>
+                    <button id="btn-send" class="btn-primary" disabled>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- How to Use Modal -->
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h3>How to Use Code Companion 🚀</h3>
+            <p>I am a RAG-powered developer assistant running locally on your machine. I can read your source code files (Python, C, C++, Java, JS/TS, HTML, CSS, Markdown, etc.) and answer your questions directly.</p>
+            <p><strong>To get started:</strong></p>
+            <ol style="margin-left: 20px; margin-top: 10px; margin-bottom: 10px;">
+                <li style="margin-bottom: 6px;">Enter your project's absolute folder path in the sidebar.</li>
+                <li style="margin-bottom: 6px;">Click <strong>Index</strong> to scan and vector-embed your code.</li>
+                <li style="margin-bottom: 6px;">Select or filter files in the browser sidebar to narrow down my focus.</li>
+                <li style="margin-bottom: 6px;">Ask me questions like <em>"Explain the logic in XYZ function"</em>, <em>"How does the database connection work?"</em>, or <em>"Explain this project's README"</em>.</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
