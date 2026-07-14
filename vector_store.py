@@ -14,9 +14,9 @@ def get_embedding(text):
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if api_key:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
         payload = {
-            "model": "models/text-embedding-004",
+            "model": "models/gemini-embedding-001",
             "content": {
                 "parts": [{"text": text}]
             }
@@ -95,9 +95,17 @@ class VectorStore:
             cursor = conn.cursor()
             cursor.execute("SELECT last_modified FROM indexed_files WHERE file_path = ?", (file_path,))
             row = cursor.fetchone()
-            if row:
-                return row[0] == current_mtime
-            return False
+            if not row:
+                return False
+            db_mtime = row[0]
+            
+            # Ensure we actually have chunks for this file
+            cursor.execute("SELECT COUNT(*) FROM chunks WHERE file_path = ?", (file_path,))
+            chunk_count = cursor.fetchone()[0]
+            if chunk_count == 0:
+                return False
+                
+            return db_mtime == current_mtime
 
     def add_file_chunks(self, file_path, mtime, chunks):
         """
